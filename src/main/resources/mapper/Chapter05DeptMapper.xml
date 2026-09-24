@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.mapper.Chapter05DeptMapper">
+
+    <!-- ========== ResultMap：一对多 嵌套结果 ========== -->
+    <!--
+        dept 与 emp 都有 deptno 列，emp 侧起别名 emp_deptno 避免冲突。
+        部门主键必须用 <id>，否则 JOIN 出的多行会被当作多个部门对象。
+    -->
+    <resultMap id="deptWithEmpsMap" type="com.example.entity.Dept">
+        <id property="deptno" column="deptno"/>
+        <result property="dname" column="dname"/>
+        <result property="loc" column="loc"/>
+        <collection property="emps" ofType="com.example.entity.Emp">
+            <id property="empno" column="empno"/>
+            <result property="ename" column="ename"/>
+            <result property="job" column="job"/>
+            <result property="mgr" column="mgr"/>
+            <result property="hiredate" column="hiredate"/>
+            <result property="sal" column="sal"/>
+            <result property="comm" column="comm"/>
+            <result property="deptno" column="emp_deptno"/>
+        </collection>
+    </resultMap>
+
+    <!-- ========== 一对多（XML方式）========== -->
+    <select id="one2manyByXml" parameterType="int" resultMap="deptWithEmpsMap">
+        SELECT d.deptno, d.dname, d.loc,
+               e.empno, e.ename, e.job, e.mgr, e.hiredate, e.sal, e.comm,
+               e.deptno AS emp_deptno
+        FROM dept d
+        LEFT JOIN emp e ON d.deptno = e.deptno
+        WHERE d.deptno = #{deptno}
+        ORDER BY e.empno
+    </select>
+
+</mapper>

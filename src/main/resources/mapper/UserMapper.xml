@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.mapper.UserMapper">
+
+    <!-- ==================== 原有方法（保持兼容）==================== -->
+
+
+    <!-- 查询所有用户（与 UserMapper 接口 findAll 对应） -->
+    <select id="findAll" resultType="com.example.entity.User">
+        SELECT * FROM user
+    </select>
+
+    <!-- 查询所有用户 -->
+    <select id="findAllByxml" resultType="com.example.entity.User">
+        SELECT * FROM user
+    </select>
+
+    <select id="testfind" parameterType="string" resultType="com.example.entity.User">
+        SELECT * FROM user WHERE username = #{username}
+    </select>
+
+    <!-- 根据ID查询用户 -->
+    <select id="findById" parameterType="int" resultType="com.example.entity.User">
+        SELECT * FROM user WHERE id = #{id}
+    </select>
+
+    <!-- 添加用户 -->
+    <insert id="addUser" parameterType="com.example.entity.User"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO user(username, password, email)
+        VALUES(#{username}, #{password}, #{email})
+    </insert>
+
+    <!-- 更新用户 -->
+    <update id="updateUser" parameterType="com.example.entity.User">
+        UPDATE user
+        SET username = #{username},
+            password = #{password},
+            email = #{email}
+        WHERE id = #{id}
+    </update>
+
+    <!-- 删除用户 -->
+    <delete id="deleteUser" parameterType="int">
+        DELETE FROM user WHERE id = #{id}
+    </delete>
+
+    <!-- 根据用户名模糊查询 -->
+    <select id="findByUsernameLike" parameterType="string" resultType="com.example.entity.User">
+        SELECT * FROM user WHERE username LIKE CONCAT('%', #{username}, '%')
+    </select>
+
+    <!-- ==================== 知识点1：#{} vs ${} ==================== -->
+    <!--
+        #{}：预编译参数（推荐，防SQL注入），底层用 ? 占位
+        ${}：字符串直接拼接（有注入风险，但能动态拼表名/列名/排序方向）
+        对比：下方两个查询，findByUsernamePre用#{}，findByUsernameXML用${}
+    -->
+
+    <!-- 用 #{} 查询（安全，推荐） -->
+    <select id="findByUsernamePre" parameterType="string" resultType="com.example.entity.User">
+        SELECT * FROM user WHERE username = #{username}
+    </select>
+
+    <!-- 用 ${} 查询（危险！仅演示区别） -->
+    <select id="findByUsernameXML" parameterType="string" resultType="com.example.entity.User">
+        SELECT * FROM user WHERE username = ${username}
+    </select>
+
+    <!-- ==================== 知识点2：Map 传参 ==================== -->
+    <!--
+        当需要传多个无关联的参数时，可以用 Map<String, Object>
+        parameterType="Map" 即可，SQL 里用 #{key} 取 Map 的值
+    -->
+    <select id="findByMap" parameterType="Map" resultType="com.example.entity.User">
+        SELECT * FROM user WHERE password = #{abc} OR username = #{username}
+    </select>
+
+    <!-- ==================== 知识点3：聚合函数 ==================== -->
+    <!--
+        聚合函数返回值类型：单值直接写 resultType，多值可用 Map
+        MyBatis 会把查询到的列名作为 Map 的 key
+    -->
+
+    <!-- 查询总条数（单值） -->
+    <select id="findCount" resultType="java.lang.Integer">
+        SELECT COUNT(*) FROM user
+    </select>
+
+    <!-- 查询 COUNT + SUM（多值返回 Map 列表） -->
+    <select id="findCountAndSum" resultType="java.util.Map">
+        SELECT COUNT(*) AS count, SUM(id) AS sum FROM user
+    </select>
+
+    <!-- ==================== 别名方法（与 HTML 教学一致）==================== -->
+
+    <!-- 根据ID查询用户（别名：selectById） -->
+    <select id="selectById" parameterType="int" resultType="com.example.entity.User">
+        SELECT * FROM user WHERE id = #{id}
+    </select>
+
+    <!-- 添加用户（别名：insert） -->
+    <insert id="insert" parameterType="com.example.entity.User"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO user(username, password, email)
+        VALUES(#{username}, #{password}, #{email})
+    </insert>
+
+    <!-- 更新用户（别名：update） -->
+    <update id="update" parameterType="com.example.entity.User">
+        UPDATE user
+        SET username = #{username},
+            password = #{password},
+            email = #{email}
+        WHERE id = #{id}
+    </update>
+
+    <!-- 删除用户（别名：deleteById） -->
+    <delete id="deleteById" parameterType="int">
+        DELETE FROM user WHERE id = #{id}
+    </delete>
+
+    <!-- 查询所有用户（别名：selectAll） -->
+    <select id="selectAll" resultType="com.example.entity.User">
+        SELECT * FROM user
+    </select>
+
+</mapper>

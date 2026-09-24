@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+    混合开发的 XML 配置
+    namespace 必须与 UserMapperMixed 接口的全限定名一致
+
+    本文件只放复杂 SQL（动态 SQL），简单 SQL 已在接口注解里实现
+-->
+<mapper namespace="com.example.mapper.UserMapperMixed">
+
+    <!--
+        动态条件查询：根据 User 对象的非空字段拼接 WHERE 条件
+        - <where> 标签：自动去掉多余的 AND/OR
+        - <if> 标签：字段非空才拼接条件
+        这是典型的"复杂 SQL 用 XML"场景，注解里写动态 SQL 很费劲
+    -->
+    <select id="findByCondition" parameterType="com.example.entity.User"
+            resultType="com.example.entity.User">
+        SELECT * FROM user
+        <where>
+            <if test="id != null">
+                AND id = #{id}
+            </if>
+            <if test="username != null and username != ''">
+                AND username = #{username}
+            </if>
+            <if test="email != null and email != ''">
+                AND email = #{email}
+            </if>
+        </where>
+    </select>
+
+</mapper>

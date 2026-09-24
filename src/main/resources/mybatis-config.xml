@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+
+<configuration>
+
+    <!-- 引入公共数据库配置properties文件 -->
+    <properties resource="db.properties"/>
+
+    <!-- 全局设置 -->
+    <settings>
+        <!-- 开启日志 -->
+        <setting name="logImpl" value="LOG4J"/>
+        <!-- 开启驼峰命名自动映射 -->
+        <setting name="mapUnderscoreToCamelCase" value="true"/>
+        <!-- 开启延迟加载（嵌套 select 场景：不访问关联属性就不发子查询） -->
+        <setting name="lazyLoadingEnabled" value="true"/>
+    </settings>
+
+    <!-- 环境配置 -->
+    <environments default="development">
+        <environment id="development">
+            <!-- 事务管理器 -->
+            <transactionManager type="JDBC"/>
+            <!-- 数据源 -->
+            <dataSource type="POOLED">
+                <property name="driver" value="${jdbc.driver}"/>
+                <property name="url" value="${jdbc.url}"/>
+                <property name="username" value="${jdbc.username}"/>
+                <property name="password" value="${jdbc.password}"/>
+            </dataSource>
+        </environment>
+    </environments>
+
+    <!-- 注册Mapper,指定操作的具体的mapper文件路径 -->
+    <mappers>
+        <!-- XML 方式 -->
+        <mapper resource="mapper/UserMapper.xml"/>
+
+        <!-- 注解方式（使用 class 属性，不需要 XML 文件） -->
+        <mapper class="com.example.mapper.UserMapperAnnotation"/>
+
+        <!-- 混合开发 -->
+        <mapper class="com.example.mapper.UserMapperMixed"/>
+        <mapper resource="mapper/UserMapperMixed.xml"/>
+
+        <!-- 第3节：ResultMap + 动态 SQL -->
+        <mapper resource="mapper/Chapter03UserMapper.xml"/>
+
+        <!-- 第05章：关联映射（一对一/多对一/一对多/多对多） -->
+        <!-- 同时注册 class + resource：class 提供 @One/@Many 注解方法，resource 提供 XML 映射方法 -->
+        <mapper class="com.example.mapper.Chapter05DeptMapper"/>
+        <mapper resource="mapper/Chapter05DeptMapper.xml"/>
+        <mapper class="com.example.mapper.Chapter05EmpMapper"/>
+        <mapper resource="mapper/Chapter05EmpMapper.xml"/>
+    </mappers>
+
+</configuration>

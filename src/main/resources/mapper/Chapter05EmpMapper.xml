@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.mapper.Chapter05EmpMapper">
+
+    <!-- ========== ResultMap：一对一 / 多对一 嵌套结果 ========== -->
+    <!--
+        emp 与 dept 都有 deptno 列，emp 侧起别名 emp_deptno 避免冲突。
+        <association> 用于单个对象属性（多对一/一对一）。
+    -->
+    <resultMap id="empWithDeptMap" type="com.example.entity.Emp">
+        <id property="empno" column="empno"/>
+        <result property="ename" column="ename"/>
+        <result property="job" column="job"/>
+        <result property="mgr" column="mgr"/>
+        <result property="hiredate" column="hiredate"/>
+        <result property="sal" column="sal"/>
+        <result property="comm" column="comm"/>
+        <!-- emp.deptno 起了别名 emp_deptno，避免与 dept.deptno 冲突 -->
+        <result property="deptno" column="emp_deptno"/>
+        <association property="dept" javaType="com.example.entity.Dept">
+            <id property="deptno" column="deptno"/>
+            <result property="dname" column="dname"/>
+            <result property="loc" column="loc"/>
+        </association>
+    </resultMap>
+
+    <!-- ========== ResultMap：多对多 嵌套结果 ========== -->
+    <!--
+        两次 LEFT JOIN + DISTINCT 去重。
+        skill 列起别名 skill_id / skill_name / skill_desc 避免冲突。
+        <collection> 用于集合属性，ofType 指定元素类型。
+    -->
+    <resultMap id="empWithSkillsMap" type="com.example.entity.Emp">
+        <id property="empno" column="empno"/>
+        <result property="ename" column="ename"/>
+        <result property="job" column="job"/>
+        <result property="mgr" column="mgr"/>
+        <result property="hiredate" column="hiredate"/>
+        <result property="sal" column="sal"/>
+        <result property="comm" column="comm"/>
+        <result property="deptno" column="deptno"/>
+        <collection property="skills" ofType="com.example.entity.Skill">
+            <id property="id" column="skill_id"/>
+            <result property="name" column="skill_name"/>
+            <result property="description" column="skill_desc"/>
+        </collection>
+    </resultMap>
+
+    <!-- ========== 一对一（XML方式）========== -->
+    <select id="one2oneByXml" parameterType="int" resultMap="empWithDeptMap">
+        SELECT e.empno, e.ename, e.job, e.sal, e.mgr, e.hiredate, e.comm,
+               e.deptno AS emp_deptno,
+               d.deptno, d.dname, d.loc
+        FROM emp e
+        LEFT JOIN dept d ON e.deptno = d.deptno
+        WHERE e.empno = #{empno}
+    </select>
+
+    <!-- ========== 多对一（XML方式）========== -->
+    <select id="many2oneByXml" resultMap="empWithDeptMap">
+        SELECT e.empno, e.ename, e.job, e.sal, e.mgr, e.hiredate, e.comm,
+               e.deptno AS emp_deptno,
+               d.deptno, d.dname, d.loc
+        FROM emp e
+        LEFT JOIN dept d ON e.deptno = d.deptno
+        ORDER BY e.empno
+    </select>
+
+    <!-- ========== 多对多（XML方式）========== -->
+    <select id="many2manyByXml" parameterType="int" resultMap="empWithSkillsMap">
+        SELECT DISTINCT e.empno, e.ename, e.job, e.sal, e.deptno,
+               s.id AS skill_id, s.name AS skill_name, s.description AS skill_desc
+        FROM emp e
+        LEFT JOIN emp_skill es ON e.empno = es.empno
+        LEFT JOIN skill s ON es.skill_id = s.id
+        WHERE e.empno = #{empno}
+    </select>
+
+</mapper>
