@@ -1,11 +1,21 @@
 package com.example.entity;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Date;
 
 /**
- * 员工信息实体（对应数据库 emp 表）
+ * 员工信息实体（对应数据库 employee 表）
+ *
+ * MyBatis-Plus 注解说明：
+ *   @TableName  指定实体映射的数据库表名
+ *   @TableId    标记主键字段，type=AUTO 表示数据库自增
+ *   @TableField 标记非主键字段，显式指定列名（驼峰与下划线不一致时必须）
  *
  * 字段说明：
  *   empId    员工编号（主键，自增）
@@ -17,15 +27,23 @@ import java.util.Date;
  *   hireDate 入职日期
  *   status   在职状态（1=在职，0=离职）
  */
+@TableName("employee")
 public class Employee implements Serializable {
 
+    @TableId(value = "emp_id", type = IdType.AUTO)
     private Integer empId;
+
+    @TableField("emp_name")
     private String empName;
+
     private String gender;
     private String dept;
     private String post;
     private BigDecimal salary;
+
+    @TableField("hire_date")
     private Date hireDate;
+
     private Integer status;
 
     public Employee() {

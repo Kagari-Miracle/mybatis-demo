@@ -59,6 +59,9 @@
         <mapper resource="mapper/EmployeeMapper.xml"/>
         <mapper class="com.example.mapper.EmployeeMapperAnnotation"/>
 
+        <!-- 实验一 任务4：MyBatis-Plus 通用 CRUD（继承 BaseMapper，零 SQL） -->
+        <mapper class="com.example.mapper.EmployeeMapperPlus"/>
+
         <!-- 课堂练习：供应商-商品-客户 多表关联查询 -->
         <mapper resource="mapper/ProductMapper.xml"/>
         <mapper resource="mapper/SupplierMapper.xml"/>
