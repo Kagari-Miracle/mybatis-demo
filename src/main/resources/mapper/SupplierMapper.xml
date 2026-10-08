@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.mapper.SupplierMapper">
+
+    <!-- ==================== 结果映射 ==================== -->
+
+    <!-- 供应商 → 商品列表 → 每个商品的客户 -->
+    <resultMap id="supplierWithProductsMap" type="com.example.entity.Supplier">
+        <id     property="id"      column="s_id"/>
+        <result property="name"    column="s_name"/>
+        <result property="phone"   column="s_phone"/>
+        <result property="address" column="s_address"/>
+
+        <!-- 多对多：供应商供应的商品 -->
+        <collection property="products" ofType="com.example.entity.Product">
+            <id     property="id"         column="p_id"/>
+            <result property="name"       column="p_name"/>
+            <result property="price"      column="p_price"/>
+            <result property="stock"      column="p_stock"/>
+            <result property="customerId" column="p_customer_id"/>
+
+            <!-- 多对一：买走该商品的客户 -->
+            <association property="customer" javaType="com.example.entity.Customer">
+                <id     property="id"      column="c_id"/>
+                <result property="name"    column="c_name"/>
+                <result property="phone"   column="c_phone"/>
+                <result property="address" column="c_address"/>
+            </association>
+        </collection>
+
+        <!-- 多对多：供应商服务过的客户（维修/服务记录） -->
+        <collection property="customers" ofType="com.example.entity.Customer">
+            <id     property="id"      column="sc_customer_id"/>
+            <result property="name"    column="sc_customer_name"/>
+        </collection>
+    </resultMap>
+
+    <!-- ==================== 查询 ==================== -->
+
+    <!--
+        查询供应商卖过的商品、被哪些客户买走、有无提供服务
+        一次 JOIN 查出：供应商 → 商品 → 客户，以及供应商的服务客户
+        使用子查询分别查商品和服务客户，避免 JOIN 导致数据膨胀
+    -->
+    <select id="findSupplierDetail" resultMap="supplierWithProductsMap">
+        SELECT
+            s.id AS s_id, s.name AS s_name, s.phone AS s_phone, s.address AS s_address,
+            p.id AS p_id, p.name AS p_name, p.price AS p_price, p.stock AS p_stock,
+            p.customer_id AS p_customer_id,
+            c.id AS c_id, c.name AS c_name, c.phone AS c_phone, c.address AS c_address
+        FROM supplier s
+        LEFT JOIN supplier_product sp ON s.id = sp.supplier_id
+        LEFT JOIN product p ON sp.product_id = p.id
+        LEFT JOIN customer c ON p.customer_id = c.id
+        ORDER BY s.id, p.id
+    </select>
+
+</mapper>

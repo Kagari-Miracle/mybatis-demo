@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.mapper.ProductMapper">
+
+    <!-- 商品销售详情映射 -->
+    <resultMap id="productSalesMap" type="com.example.entity.ProductSalesVO">
+        <result property="productId"    column="product_id"/>
+        <result property="productName"  column="product_name"/>
+        <result property="price"        column="price"/>
+        <result property="customerId"   column="customer_id"/>
+        <result property="customerName" column="customer_name"/>
+        <result property="supplierId"   column="supplier_id"/>
+        <result property="supplierName" column="supplier_name"/>
+        <result property="hasService"   column="has_service"/>
+        <result property="serviceType"  column="service_type"/>
+        <result property="serviceResult" column="service_result"/>
+    </resultMap>
+
+    <!--
+        查询已售商品：供应商 → 客户 → 是否享受服务
+        表关联链路：
+          product（已售）→ supplier_product → supplier（提供商品的供应商）
+                       → customer（买走商品的客户）
+          再 LEFT JOIN supplier_customer 判断该供应商是否为该客户提供过服务
+    -->
+    <select id="findSoldProducts" resultMap="productSalesMap">
+        SELECT
+            p.id        AS product_id,
+            p.name      AS product_name,
+            p.price     AS price,
+            c.id        AS customer_id,
+            c.name      AS customer_name,
+            s.id        AS supplier_id,
+            s.name      AS supplier_name,
+            CASE WHEN sc.id IS NOT NULL THEN TRUE ELSE FALSE END AS has_service,
+            sc.service_type   AS service_type,
+            sc.service_result AS service_result
+        FROM product p
+        INNER JOIN supplier_product sp ON p.id = sp.product_id
+        INNER JOIN supplier s          ON sp.supplier_id = s.id
+        INNER JOIN customer c          ON p.customer_id = c.id
+        LEFT JOIN supplier_customer sc ON sc.supplier_id = s.id
+                                       AND sc.customer_id = c.id
+        WHERE p.customer_id IS NOT NULL
+        ORDER BY p.id
+    </select>
+
+</mapper>
