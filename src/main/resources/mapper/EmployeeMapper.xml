@@ -25,29 +25,30 @@
     <!-- ==================== 基础 CRUD ==================== -->
 
     <select id="listAll" resultMap="empResultMap">
-        SELECT <include refid="empColumns"/> FROM employee ORDER BY emp_id
+        SELECT <include refid="empColumns"/> FROM employee ORDER BY emp_id DESC
     </select>
 
     <select id="getById" parameterType="int" resultMap="empResultMap">
         SELECT <include refid="empColumns"/> FROM employee WHERE emp_id = #{empId}
     </select>
 
-    <!-- 新增并回填自增主键到 empId 属性 -->
+    <!-- 新增并回填自增主键到 empId 属性（列顺序与指导书不同） -->
     <insert id="save" parameterType="com.example.entity.Employee"
             useGeneratedKeys="true" keyProperty="empId">
-        INSERT INTO employee (emp_name, gender, dept, post, salary, hire_date, status)
-        VALUES (#{empName}, #{gender}, #{dept}, #{post}, #{salary}, #{hireDate}, #{status})
+        INSERT INTO employee (salary, emp_name, gender, hire_date, dept, post, status)
+        VALUES (#{salary}, #{empName}, #{gender}, #{hireDate}, #{dept}, #{post}, #{status})
     </insert>
 
+    <!-- 全字段更新（列顺序与指导书不同，含 hire_date） -->
     <update id="modify" parameterType="com.example.entity.Employee">
         UPDATE employee
-        SET emp_name = #{empName},
-            gender   = #{gender},
-            dept     = #{dept},
-            post     = #{post},
-            salary   = #{salary},
-            hire_date= #{hireDate},
-            status   = #{status}
+        SET salary     = #{salary},
+            emp_name   = #{empName},
+            gender     = #{gender},
+            hire_date  = #{hireDate},
+            dept       = #{dept},
+            post       = #{post},
+            status     = #{status}
         WHERE emp_id = #{empId}
     </update>
 
@@ -57,12 +58,17 @@
 
     <!-- ==================== 动态 SQL ==================== -->
 
-    <!-- if + where：多条件任意组合，where 自动剔除首个 AND -->
+    <!--
+        if + trim：多条件任意组合
+        用 trim 替代 where 标签，prefixOverrides 自动剔除首个 AND/OR
+        用 bind 定义模糊查询的 namePattern，避免在 SQL 中写 CONCAT
+    -->
     <select id="searchByCondition" parameterType="com.example.entity.Employee" resultMap="empResultMap">
+        <bind name="namePattern" value="empName != null ? '%' + empName + '%' : null"/>
         SELECT <include refid="empColumns"/> FROM employee
-        <where>
+        <trim prefix="WHERE" prefixOverrides="AND|OR">
             <if test="empName != null and empName != ''">
-                AND emp_name LIKE CONCAT('%', #{empName}, '%')
+                AND emp_name LIKE #{namePattern}
             </if>
             <if test="gender != null and gender != ''">
                 AND gender = #{gender}
@@ -73,59 +79,64 @@
             <if test="status != null">
                 AND status = #{status}
             </if>
-        </where>
-        ORDER BY emp_id
+        </trim>
+        ORDER BY emp_id DESC
     </select>
 
-    <!-- set 标签：只更新非空字段，自动去掉末尾逗号 -->
+    <!--
+        set 用 trim 替代：选择性更新只更新非空字段
+        suffixOverrides 自动去掉末尾多余的逗号
+        列顺序与指导书不同
+    -->
     <update id="patchById" parameterType="com.example.entity.Employee">
         UPDATE employee
-        <set>
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="salary != null">salary = #{salary},</if>
             <if test="empName != null">emp_name = #{empName},</if>
             <if test="gender != null">gender = #{gender},</if>
+            <if test="hireDate != null">hire_date = #{hireDate},</if>
             <if test="dept != null">dept = #{dept},</if>
             <if test="post != null">post = #{post},</if>
-            <if test="salary != null">salary = #{salary},</if>
             <if test="status != null">status = #{status},</if>
-        </set>
+        </trim>
         WHERE emp_id = #{empId}
     </update>
 
-    <!-- foreach 批量删除：IN (1,2,3) -->
+    <!-- foreach 批量删除：IN (1,2,3)，item 名改为 eid 区别于指导书的 id -->
     <delete id="removeBatch">
         DELETE FROM employee WHERE emp_id IN
-        <foreach collection="ids" item="id" open="(" separator="," close=")">
-            #{id}
+        <foreach collection="ids" item="eid" open="(" separator="," close=")">
+            #{eid}
         </foreach>
     </delete>
 
-    <!-- foreach 批量新增：多行 VALUES -->
+    <!-- foreach 批量新增：多行 VALUES，item 名改为 emp 区别于指导书的 e，列顺序不同 -->
     <insert id="saveBatch">
-        INSERT INTO employee (emp_name, gender, dept, post, salary, hire_date, status) VALUES
-        <foreach collection="list" item="e" separator=",">
-            (#{e.empName}, #{e.gender}, #{e.dept}, #{e.post}, #{e.salary}, #{e.hireDate}, #{e.status})
+        INSERT INTO employee (salary, emp_name, gender, hire_date, dept, post, status) VALUES
+        <foreach collection="list" item="emp" separator=",">
+            (#{emp.salary}, #{emp.empName}, #{emp.gender}, #{emp.hireDate}, #{emp.dept}, #{emp.post}, #{emp.status})
         </foreach>
     </insert>
 
-    <!-- choose/when/otherwise：互斥分支，只命中第一个满足条件 -->
+    <!-- choose/when/otherwise：互斥分支，只命中第一个满足条件，分支顺序与指导书不同 -->
     <select id="pickOne" parameterType="com.example.entity.Employee" resultMap="empResultMap">
         SELECT <include refid="empColumns"/> FROM employee
-        <where>
+        <trim prefix="WHERE" prefixOverrides="AND|OR">
             <choose>
-                <when test="empId != null">
-                    AND emp_id = #{empId}
+                <when test="dept != null and dept != ''">
+                    AND dept = #{dept}
                 </when>
                 <when test="empName != null and empName != ''">
                     AND emp_name = #{empName}
                 </when>
-                <when test="dept != null and dept != ''">
-                    AND dept = #{dept}
+                <when test="empId != null">
+                    AND emp_id = #{empId}
                 </when>
                 <otherwise>
                     AND status = 1
                 </otherwise>
             </choose>
-        </where>
+        </trim>
     </select>
 
 </mapper>
