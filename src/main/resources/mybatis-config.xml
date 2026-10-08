@@ -54,6 +54,10 @@
         <mapper resource="mapper/Chapter05DeptMapper.xml"/>
         <mapper class="com.example.mapper.Chapter05EmpMapper"/>
         <mapper resource="mapper/Chapter05EmpMapper.xml"/>
+
+        <!-- 实验一：员工 CRUD（XML 基础语句 + 注解方式） -->
+        <mapper resource="mapper/EmployeeMapper.xml"/>
+        <mapper class="com.example.mapper.EmployeeMapperAnnotation"/>
     </mappers>
 
 </configuration>
